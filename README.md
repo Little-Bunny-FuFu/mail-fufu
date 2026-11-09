@@ -10,7 +10,7 @@ It contains no EasyMail code, strings or artwork. It only post-hooks Blizzard's 
 so the same files run on both client shapes (the global-function mail UI of 12.1.x and
 the mixin mail UI of WoW Forever / 12.2).
 
-> Status: **0.1.0, verified on retail 12.1.x (2026-11-09); WoW Forever test pending.** Static checks pass; see the test plan in
+> Status: **0.1.0, verified in-game on retail 12.1.x and WoW Forever 1.60.x (2026-11-09).** Test plan in
 > `../Mail-fufu - Design plan (2026-11-09).md` section 5 for what to verify in-game.
 
 ## Features
