@@ -1,3 +1,7 @@
+* 0.1.2 (2026-11-09) - verified on retail 12.1.x and WoW Forever 1.60.x
+- Wording pass over every tooltip, option description and chat line: full sentences,
+  consistent "mail" wording, Title Case window title, US spelling.
+
 * 0.1.1 (2026-11-09) - verified on retail 12.1.x and WoW Forever 1.60.x
 - History: each sent mail now also logs its attachments (item links with stack counts),
   sent money and C.O.D. amount. Rows show a third line with the first three items and the
