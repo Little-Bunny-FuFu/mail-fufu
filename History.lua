@@ -37,7 +37,8 @@ ns.History = History
 
 local FRAME_NAME = "MailFufuHistoryFrame"
 local WIDTH, HEIGHT = 450, 535
-local ROW_HEIGHT = 40
+local ROW_HEIGHT = 54           -- three lines: header, subject, attachments
+local ITEMS_IN_ROW = 3          -- attachments named in a row before "+N more"
 local DATE_FORMAT = "%Y-%m-%d %H:%M"
 local MAIL_ICON = "Interface\\MailFrame\\Mail-Icon"                  -- MailFrame.lua, both branches
 local HILIGHT = "Interface\\Buttons\\UI-Common-MouseHilight"         -- MailFrame.xml, both branches
@@ -75,6 +76,77 @@ local function Text(value)
 	return tostring(value)
 end
 
+-- ---------------------------------------------------------------------------
+-- Attachment formatting (items, money, C.O.D. stored by History.Add)
+-- ---------------------------------------------------------------------------
+local function MoneyText(copper)
+	if type(copper) ~= "number" or copper <= 0 then return nil end
+	return GetMoneyString(copper, true)
+end
+
+-- "[Item Link]x5" (link when the client gave one, else the plain name).
+local function ItemText(item, withIcon)
+	if type(item) ~= "table" then return nil end
+	local text = item.link or item.name
+	if not text or text == "" then text = UNKNOWN end
+	if (tonumber(item.count) or 1) > 1 then
+		text = text .. "x" .. item.count
+	end
+	if withIcon and type(item.icon) == "number" then
+		text = "|T" .. item.icon .. ":14|t " .. text
+	end
+	return text
+end
+
+local function HasAttachments(e)
+	return (type(e.items) == "table" and #e.items > 0)
+		or MoneyText(e.money) ~= nil or MoneyText(e.cod) ~= nil
+end
+
+-- One-line summary: "[A]x5, [B], +3 more  money: 12g 5s"; nil when the mail carried
+-- nothing. limit caps the items named (nil = all).
+local function AttachmentSummary(e, limit)
+	local parts = {}
+	local items = e.items
+	if type(items) == "table" and #items > 0 then
+		local n = #items
+		local shown = limit and math.min(n, limit) or n
+		local names = {}
+		for i = 1, shown do
+			names[#names + 1] = ItemText(items[i])
+		end
+		if n > shown then
+			names[#names + 1] = format(L.HISTORY_MORE, n - shown)
+		end
+		parts[#parts + 1] = table.concat(names, ", ")
+	end
+	local money = MoneyText(e.money)
+	if money then parts[#parts + 1] = format(L.HISTORY_MONEY, money) end
+	local cod = MoneyText(e.cod)
+	if cod then parts[#parts + 1] = format(L.HISTORY_COD, cod) end
+	if #parts == 0 then return nil end
+	return table.concat(parts, "  ")
+end
+
+-- Full attachment block for tooltips: header, one line per item (icon + link), money lines.
+local function AddAttachmentLines(tooltip, e)
+	if not HasAttachments(e) then
+		tooltip:AddLine(L.HISTORY_NO_ATTACH, 0.5, 0.5, 0.5)
+		return
+	end
+	local items = e.items
+	if type(items) == "table" and #items > 0 then
+		tooltip:AddLine(L.HISTORY_TT_ITEMS, 1, 0.82, 0)
+		for i = 1, #items do
+			tooltip:AddLine(ItemText(items[i], true), 1, 1, 1)
+		end
+	end
+	local money = MoneyText(e.money)
+	if money then tooltip:AddDoubleLine(L.HISTORY_TT_MONEY, money, 1, 0.82, 0, 1, 1, 1) end
+	local cod = MoneyText(e.cod)
+	if cod then tooltip:AddDoubleLine(L.HISTORY_TT_COD, cod, 1, 0.82, 0, 1, 1, 1) end
+end
+
 -- Drop the oldest entries until at most n remain (n = 0 empties the log).
 function History.Truncate(n)
 	local entries = Entries()
@@ -96,8 +168,10 @@ function History.Truncate(n)
 	end
 end
 
--- Append one sent mail. Returns the stored entry, or nil when the history is off.
-function History.Add(to, subject)
+-- Append one sent mail. items = array of { name, id, link, count, icon } (or nil), money
+-- and cod in copper. Empty values are not stored so old and attachment-less entries look
+-- alike. Returns the stored entry, or nil when the history is off.
+function History.Add(to, subject, items, money, cod)
 	local entries = Entries()
 	local maxLen = ns.GetOption("historyLength") or 0
 	if not entries or maxLen <= 0 then return nil end
@@ -111,6 +185,11 @@ function History.Add(to, subject)
 		subzone = GetMinimapZoneText(),
 		when = time(),
 	}
+	if type(items) == "table" and #items > 0 then
+		entry.items = items
+	end
+	if type(money) == "number" and money > 0 then entry.money = money end
+	if type(cod) == "number" and cod > 0 then entry.cod = cod end
 	entries[#entries + 1] = entry
 	History.Truncate(maxLen)
 	return entry
@@ -152,12 +231,28 @@ function History.PrintLast()
 		ns.Print(L.LAST_NONE)
 		return
 	end
-	ns.Print(format(L.LAST_LINE, FormatWhen(e.when), Text(e.from), Text(e.to), e.subject or ""))
+	local line = format(L.LAST_LINE, FormatWhen(e.when), Text(e.from), Text(e.to), e.subject or "")
+	local summary = AttachmentSummary(e)
+	if summary then
+		line = line .. " " .. format(L.LAST_ATTACH, summary)
+	end
+	ns.Print(line)
 end
 
 -- ---------------------------------------------------------------------------
 -- History window (H2)
 -- ---------------------------------------------------------------------------
+local function RowTooltip(row)
+	local e = row.entry
+	if not e then return end
+	GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
+	GameTooltip_SetTitle(GameTooltip, (e.subject and e.subject ~= "") and e.subject or L.HISTORY_TT_ITEMS)
+	GameTooltip:AddDoubleLine(L.HISTORY_TT_TO, Text(e.to), 1, 0.82, 0, 1, 1, 1)
+	GameTooltip:AddLine(" ")
+	AddAttachmentLines(GameTooltip, e)
+	GameTooltip:Show()
+end
+
 local function InitRow(row, data)
 	if not row.line1 then
 		row.line1 = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -170,8 +265,18 @@ local function InitRow(row, data)
 		row.line2:SetPoint("TOPRIGHT", row.line1, "BOTTOMRIGHT", 0, -4)
 		row.line2:SetJustifyH("LEFT")
 		row.line2:SetWordWrap(false)
+		row.line3 = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		row.line3:SetPoint("TOPLEFT", row.line2, "BOTTOMLEFT", 0, -3)
+		row.line3:SetPoint("TOPRIGHT", row.line2, "BOTTOMRIGHT", 0, -3)
+		row.line3:SetJustifyH("LEFT")
+		row.line3:SetWordWrap(false)
+		-- Hover lists every attachment (the row names at most ITEMS_IN_ROW of them).
+		row:EnableMouse(true)
+		row:SetScript("OnEnter", RowTooltip)
+		row:SetScript("OnLeave", GameTooltip_Hide)
 	end
 	local e = data.entry
+	row.entry = e
 	local from = Text(e.from)
 	-- In "All realms" mode, tag senders from other realms so equal names stay distinguishable.
 	if showAllRealms and e.realm and e.realm ~= Compat.RealmKey() then
@@ -179,6 +284,14 @@ local function InitRow(row, data)
 	end
 	row.line1:SetText(format(L.HISTORY_LINE1, data.n, from, FormatWhen(e.when), Text(e.to)))
 	row.line2:SetText(format(L.HISTORY_LINE2, e.subject or ""))
+	local summary = AttachmentSummary(e, ITEMS_IN_ROW)
+	if summary then
+		row.line3:SetFontObject("GameFontHighlightSmall")
+		row.line3:SetText(format(L.HISTORY_LINE3, summary))
+	else
+		row.line3:SetFontObject("GameFontDisableSmall")
+		row.line3:SetText(L.HISTORY_NO_ATTACH)
+	end
 end
 
 local function ApplyPosition()
@@ -336,6 +449,8 @@ local function PortraitTooltip(self)
 		GameTooltip:AddDoubleLine(L.HISTORY_TT_TO, Text(e.to), 1, 0.82, 0, 1, 1, 1)
 		GameTooltip:AddDoubleLine(L.HISTORY_TT_FROM, Text(e.from), 1, 0.82, 0, 1, 1, 1)
 		GameTooltip:AddDoubleLine(L.HISTORY_TT_SUBJECT, e.subject or "", 1, 0.82, 0, 1, 1, 1)
+		GameTooltip:AddLine(" ")
+		AddAttachmentLines(GameTooltip, e)
 	else
 		GameTooltip:AddLine(L.LAST_NONE, 1, 1, 1)
 	end
@@ -384,9 +499,15 @@ function History.OnLogin()
 end
 
 -- From SendMail.lua after a confirmed successful send.
-function History.MAIL_SENT(to, subject)
-	History.Add(to, subject)
-	ns.Print(format(L.SENT_LINE, Text(to), subject or ""))
+function History.MAIL_SENT(to, subject, items, money, cod)
+	History.Add(to, subject, items, money, cod)
+	local line = format(L.SENT_LINE, Text(to), subject or "")
+	-- Summarise from the arguments so the chat line is complete even with the history off.
+	local summary = AttachmentSummary({ items = items, money = money, cod = cod })
+	if summary then
+		line = line .. " " .. format(L.LAST_ATTACH, summary)
+	end
+	ns.Print(line)
 	History.Refresh()
 end
 

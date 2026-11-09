@@ -49,6 +49,7 @@ local DROPDOWN_HILIGHT = "Interface\\Buttons\\UI-Common-MouseHilight"
 local active = false
 local sending = false             -- our Send-click flag (S1: MAIL_SEND_SUCCESS also fires at odd times)
 local justSentTo, justSentSubject
+local justSentItems, justSentMoney, justSentCOD   -- attachments read at send-click for the history log
 local subjectIsOurs = false       -- S8: subject was last written by the money auto-subject
 local dropButton
 local origBoxWidth, origMiddleWidth
@@ -200,10 +201,54 @@ local function OnSendFrameShow()
 	end
 end
 
+-- Attachments, money and C.O.D. of the mail being sent, read at send-click. The client
+-- keeps the attachment slots and the money box filled until MAIL_SEND_SUCCESS runs
+-- SendMailFrame_Reset, so reading them after SendMail() is safe.
+--   HasSendMailItem(i) / GetSendMailItem(i) -> name, itemID, texture, count: MailFrame.lua
+--     SendMailFrame_Update, both branches. GetSendMailItemLink(i) is a C API Blizzard's
+--     own UI never calls, so it is type-checked and the name is the fallback.
+--   Money vs C.O.D. follows SendMailMailButton_OnClick (both branches): the amount goes
+--     to C.O.D. when the SendMailCODButton radio is checked, otherwise it is sent money.
+local function CaptureAttachments()
+	local items
+	for i = 1, (ATTACHMENTS_MAX_SEND or 12) do
+		if HasSendMailItem(i) then
+			local name, itemID, texture, count = GetSendMailItem(i)
+			local link
+			if type(GetSendMailItemLink) == "function" then
+				link = GetSendMailItemLink(i)
+			end
+			items = items or {}
+			items[#items + 1] = { name = name, id = itemID, link = link, count = count or 1, icon = texture }
+		end
+	end
+	local copper = 0
+	if SendMailMoney then
+		local ok, value = pcall(MoneyInputFrame_GetCopper, SendMailMoney)
+		if ok and type(value) == "number" then copper = value end
+	end
+	local money, cod = 0, 0
+	if copper > 0 then
+		if SendMailCODButton and SendMailCODButton:GetChecked() then
+			cod = copper
+		else
+			money = copper
+		end
+	end
+	return items, money, cod
+end
+
 local function OnSendClick()
 	sending = true
 	justSentTo = ns.Addressees.NameCase(SendMailNameEditBox:GetText())
 	justSentSubject = SendMailSubjectEditBox:GetText()
+	-- Never let a logging failure surface as an error on Blizzard's send path.
+	local ok, items, money, cod = pcall(CaptureAttachments)
+	if ok then
+		justSentItems, justSentMoney, justSentCOD = items, money, cod
+	else
+		justSentItems, justSentMoney, justSentCOD = nil, 0, 0
+	end
 end
 
 local function OnTabClick(self, tabID)
@@ -276,6 +321,7 @@ end
 function SendMail.OnMailClosed()
 	sending = false
 	justSentTo, justSentSubject = nil, nil
+	justSentItems, justSentMoney, justSentCOD = nil, nil, nil
 end
 
 function SendMail.MAIL_SEND_SUCCESS()
@@ -283,10 +329,11 @@ function SendMail.MAIL_SEND_SUCCESS()
 	if sending and justSentTo and justSentTo ~= "" then
 		ns.Addressees.Remember(justSentTo)
 		ns.Addressees.SetLastTo(justSentTo)
-		ns.Dispatch("MAIL_SENT", justSentTo, justSentSubject)
+		ns.Dispatch("MAIL_SENT", justSentTo, justSentSubject, justSentItems, justSentMoney, justSentCOD)
 	end
 	sending = false
 	justSentTo, justSentSubject = nil, nil
+	justSentItems, justSentMoney, justSentCOD = nil, nil, nil
 end
 
 function SendMail.MAIL_FAILED()

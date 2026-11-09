@@ -1,3 +1,9 @@
+* 0.1.1 (2026-11-09) - verified on retail 12.1.x and WoW Forever 1.60.x
+- History: each sent mail now also logs its attachments (item links with stack counts),
+  sent money and C.O.D. amount. Rows show a third line with the first three items and the
+  money; hovering a row lists every attachment. The envelope tooltip, the on-send chat
+  line and /mailfufu last include them too. Older entries simply show "no attachments".
+
 * 0.1.0 (2026-11-09) - verified working on retail 12.1.x and WoW Forever 1.60.x
 - Button layout matched to the EasyMail layout spec. The five inbox toolbar buttons are
   text-less UIPanelButtonTemplate buttons (Blizzard's default red button plate, same family

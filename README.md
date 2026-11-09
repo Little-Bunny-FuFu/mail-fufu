@@ -53,7 +53,8 @@ the mixin mail UI of WoW Forever / 12.2).
   total.
 
 ### History
-- Every sent mail is logged (addressee, subject, sender, zone, time). The history window
+- Every sent mail is logged (addressee, subject, attached items with counts, money or
+  C.O.D. amount, sender, zone, time). Hover a history row to see every attachment. The history window
   (left-click the envelope in the mail window's corner) lists them newest first for the
   current realm, with an "All realms" toggle. Right-click the envelope opens the options.
 - History length is configurable (0 disables it) and lives in its own SavedVariable, so
