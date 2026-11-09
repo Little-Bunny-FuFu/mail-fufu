@@ -1,0 +1,10 @@
+package-as: Mail-fufu
+manual-changelog: Changelog.txt
+
+ignore:
+  - tools
+  - branding
+  - .claude
+  - .github
+  - .luacheckrc
+  - .gitignore

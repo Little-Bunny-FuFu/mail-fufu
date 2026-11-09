@@ -2,10 +2,12 @@
 ## Title: Mail-fufu
 ## Notes: Mail window helper: remembers addressees, batch-collects attachments, forwards text, logs sent mail.
 ## Author: Little-Bunny-FuFu
-## Version: 0.1.0
+## Version: @project-version@
 ## X-License: All rights reserved.
 ## IconTexture: Interface\MailFrame\Mail-Icon
 ## Category: Inventory
+## X-Curse-Project-ID: 1793922
+## X-Website: https://github.com/Little-Bunny-FuFu/mail-fufu
 ## SavedVariables: MailFufuDB, MailFufuHistory
 
 Localization.lua

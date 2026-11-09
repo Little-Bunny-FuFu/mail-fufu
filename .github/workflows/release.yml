@@ -1,0 +1,36 @@
+name: Package and release
+
+# Build a packaged addon zip and publish a GitHub Release whenever a version tag is
+# pushed (e.g. `git tag -a v0.1.0 -m ...; git push origin v0.1.0`). Uses the
+# BigWigs/CurseForge packager, which reads .pkgmeta (package-as: Mail-fufu, the ignore
+# list, manual-changelog) and substitutes @project-version@ in the .toc from the tag.
+#
+# Distribution: the packager always publishes the zip to a GitHub Release (GITHUB_OAUTH).
+# CurseForge upload is wired below but only happens when BOTH are present:
+#   - the CF_API_KEY repo secret is set (Settings -> Secrets and variables -> Actions), and
+#   - Mail-fufu.toc declares `## X-Curse-Project-ID: <id>`.
+# Until then the packager logs "Skipping CurseForge upload" and the GitHub Release still
+# publishes. WOWI_API_TOKEN / WAGO_API_TOKEN remain unset (WoWInterface / Wago skipped).
+
+on:
+  push:
+    tags:
+      - '**'
+
+permissions:
+  contents: write   # let the packager create the GitHub Release with GITHUB_TOKEN
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone project
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so the packager can build the changelog
+
+      - name: Package and create release
+        uses: BigWigsMods/packager@v2
+        env:
+          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
