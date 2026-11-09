@@ -1,0 +1,21 @@
+## Interface: 120105, 120107, 16001
+## Title: Mail-fufu
+## Notes: Mail window helper: remembers addressees, batch-collects attachments, forwards text, logs sent mail.
+## Author: Little-Bunny-FuFu
+## Version: 0.1.0
+## X-License: All rights reserved.
+## IconTexture: Interface\MailFrame\Mail-Icon
+## Category: Inventory
+## SavedVariables: MailFufuDB, MailFufuHistory
+
+Localization.lua
+Compat.lua
+Core.lua
+Options.lua
+Addressees.xml
+Addressees.lua
+SendMail.lua
+TakeEngine.lua
+Inbox.lua
+OpenMail.lua
+History.lua

@@ -1,0 +1,12 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+	<!-- Menu element for the recently-mailed names in the addressee dropdown (Addressees.lua).
+	     Stock menu buttons are pooled plain Button frames that only receive LeftButtonUp, so a
+	     right-click never reaches MenuElementDescription:Pick. A named virtual template gives
+	     this addon its own frame pool in the menu frame factory; Addressees.lua registers the
+	     right button and calls Pick itself (pattern from 11_0_0_MenuImplementationGuide.lua,
+	     section Custom Buttons and Handling). The 1x1 size mirrors what the menu assigns to
+	     native frame types before the initializers measure the element. -->
+	<Button name="MailFufuMenuButtonTemplate" virtual="true">
+		<Size x="1" y="1"/>
+	</Button>
+</Ui>

@@ -1,0 +1,5 @@
+# graphify knowledge-graph output (regenerable; rebuild: graphify update)
+graphify-out/
+
+# Claude Code
+.claude/
