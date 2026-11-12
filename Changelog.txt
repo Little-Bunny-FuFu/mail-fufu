@@ -1,3 +1,12 @@
+* 0.1.3 (2026-11-12) - verified in game
+- Fix: dragging the "history entries" or "maximum list length" slider no longer deletes
+  data. The settings panel applies a slider while it is dragged, so passing a low value
+  dropped log entries and names for good. A lower value now takes effect the next time
+  you send mail or log in.
+- Fix: closing the options panel after opening it from the mail icon or /mailfufu no
+  longer leaves the game menu open.
+- Cleanup: removed unused internal code. No change in behavior.
+
 * 0.1.2 (2026-11-09) - verified on retail 12.1.x and WoW Forever 1.60.x
 - Wording pass over every tooltip, option description and chat line: full sentences,
   consistent "mail" wording, Title Case window title, US spelling.
