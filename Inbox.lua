@@ -47,7 +47,7 @@ local GC_BAG_SIZE = GC_SLOT_SIZE - 2 * GC_SLOT_BEVEL   -- 18
 -- marks[i] = true when the mail at absolute inbox index i is checked. Always a proper
 -- array of booleans (length = number of mails); the engine writes false into it.
 local marks = {}
-Inbox.marks = marks
+Inbox.marks = marks          -- read by tests/run.lua
 -- sigs[i] = identity (sender .. subject) of the mail at index i at the last refresh.
 local sigs = {}
 
@@ -57,10 +57,7 @@ local lastNumItems = 0
 local titleHiddenByUs = false
 local rightClickSnap = {}     -- [rowButton] = { index =, wasRead = } captured in PreClick
 
-local function Sig(index)
-	local _, _, sender, subject = GetInboxHeaderInfo(index)
-	return (sender or "") .. "\001" .. (subject or "")
-end
+local Sig = Engine.Sig        -- one identity rule for marks and takes
 
 local function PageFirstIndex()
 	local page = (InboxFrame and InboxFrame.pageNum) or 1
@@ -626,8 +623,6 @@ function Inbox.OPTION_CHANGED(key, value)
 		if not value then
 			StaticPopup_Hide("MAILFUFU_CONFIRM_DELETE_MAIL")
 		end
-	elseif key == "rightClickTake" then
-		-- Read at click time; a running take is not interrupted by the toggle.
 	end
 end
 

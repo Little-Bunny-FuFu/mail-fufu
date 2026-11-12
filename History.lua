@@ -403,14 +403,6 @@ local function CreateWindow()
 	return frame
 end
 
-function History.Show()
-	CreateWindow():Show()
-end
-
-function History.Hide()
-	if frame then frame:Hide() end
-end
-
 function History.Toggle()
 	CreateWindow()
 	frame:SetShown(not frame:IsShown())
@@ -483,7 +475,6 @@ local function CreatePortraitButton()
 	b:SetScript("OnEnter", PortraitTooltip)
 	b:SetScript("OnLeave", GameTooltip_Hide)
 	portraitButton = b
-	History.portraitButton = b
 	RaisePortraitButton()
 	-- Toplevel raising re-levels MailFrame's children; re-check on every show.
 	MailFrame:HookScript("OnShow", RaisePortraitButton)
@@ -511,12 +502,8 @@ function History.MAIL_SENT(to, subject, items, money, cod)
 	History.Refresh()
 end
 
-function History.OPTION_CHANGED(key, value)
-	if key == "historyLength" then
-		History.Truncate(value)
-		History.Refresh()
-	end
-end
+-- No trim when historyLength changes: the slider applies while it is dragged, so a trim
+-- here would delete entries on the way past. Add and OnLogin apply the cap.
 
 -- ---------------------------------------------------------------------------
 -- Slash subcommands (H4)

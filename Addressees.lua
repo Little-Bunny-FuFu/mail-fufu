@@ -451,16 +451,6 @@ function Addressees.GetGuild()
 	return guild
 end
 
-function Addressees.RefreshFriends()
-	friendsDirty = true
-	return Addressees.GetFriends()
-end
-
-function Addressees.RefreshGuild()
-	guildDirty = true
-	return Addressees.GetGuild()
-end
-
 -- Dirty-flag event handlers (registered only while the matching option is on).
 function Addressees.FRIENDLIST_UPDATE() friendsDirty = true end
 function Addressees.BN_FRIEND_INFO_CHANGED() friendsDirty = true end
@@ -772,8 +762,7 @@ function Addressees.OPTION_CHANGED(key)
 	if not active then return end
 	if key == "blizzardAutocomplete" then
 		Addressees.ApplyAutocompleteMode()
-	elseif key == "maxRecent" then
-		Addressees.Sanitize()
+	-- maxRecent: no trim here (the slider applies while dragged); Remember and OnLogin trim.
 	elseif key == "includeFriends" then
 		UpdateFriendEvents()
 		if ns.GetOption("includeFriends") then RequestFriends() end

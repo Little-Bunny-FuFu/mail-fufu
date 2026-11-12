@@ -2,6 +2,7 @@ package-as: Mail-fufu
 manual-changelog: Changelog.txt
 
 ignore:
+  - tests
   - tools
   - branding
   - .claude

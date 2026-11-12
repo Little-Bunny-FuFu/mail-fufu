@@ -64,6 +64,7 @@ local function SigAt(index)
 	local _, _, sender, subject = GetInboxHeaderInfo(index)
 	return (sender or "") .. "\001" .. (subject or "")
 end
+Engine.Sig = SigAt        -- shared with Inbox.lua (check marks)
 
 -- invoiceType, itemName for an invoice mail; nil for anything else.
 -- UNVERIFIED: Blizzard only calls GetInboxInvoiceInfo after GetInboxText() reported an

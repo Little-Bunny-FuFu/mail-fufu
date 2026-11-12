@@ -84,24 +84,14 @@ local function AddOption(def)
 end
 
 local function OnClearList()
-	local Addressees = ns.Addressees
-	if not (Addressees and Addressees.Clear) then
-		ns.Print(L.NOT_IMPLEMENTED)
-		return
-	end
 	ns.Confirm(L.CLEAR_LIST_CONFIRM, function()
-		Addressees.Clear()
+		ns.Addressees.Clear()
 		ns.Print(L.CLEAR_LIST_DONE)
 	end)
 end
 
 local function OnResetPosition()
-	local History = ns.History
-	if not (History and History.ResetPosition) then
-		ns.Print(L.NOT_IMPLEMENTED)
-		return
-	end
-	History.ResetPosition()
+	ns.History.ResetPosition()
 end
 
 local function Build()
@@ -130,7 +120,7 @@ function Options.OnLogin()
 end
 
 -- Keep the panel in sync when an option changes from outside the panel (slash command,
--- ns.ResetOptions, another module). Changes made by the panel itself are already shown.
+-- another module). Changes made by the panel itself are already shown.
 function Options.OPTION_CHANGED(key)
 	if inSetter then return end
 	local setting = settingsByKey[key]
@@ -139,13 +129,38 @@ function Options.OPTION_CHANGED(key)
 	end
 end
 
-function Options.Open()
-	if not category then Build() end
-	if category then
-		Settings.OpenToCategory(category:GetID())
+-- Blizzard closes the Settings panel with ToggleGameMenu() (SettingsPanelMixin:
+-- TransitionBackOpeningPanel, both branches), so a panel opened from the game world lands
+-- on the game menu. When we opened it, hide that menu again: from a ToggleGameMenu post-hook
+-- (same frame, so no flash), with a next-frame timer that also clears the flag when
+-- Blizzard did not call ToggleGameMenu (Edit Mode).
+-- shortcut: skipped in combat (the game menu stays up), revisit only if that annoys.
+local openedByUs, hideHooked, hidePending = false, false, false
+
+local function HideGameMenu()
+	if not hidePending then return end
+	hidePending = false
+	if GameMenuFrame and GameMenuFrame:IsShown() and not InCombatLockdown() then
+		HideUIPanel(GameMenuFrame)
 	end
 end
 
-function Options.GetCategory()
-	return category
+local function OnSettingsHide()
+	if not openedByUs then return end
+	openedByUs = false
+	hidePending = true
+	C_Timer.After(0, HideGameMenu)
+end
+
+function Options.Open()
+	if not category then Build() end
+	if category then
+		if not hideHooked and SettingsPanel then
+			hideHooked = true
+			SettingsPanel:HookScript("OnHide", OnSettingsHide)
+			hooksecurefunc("ToggleGameMenu", HideGameMenu)
+		end
+		openedByUs = hideHooked
+		Settings.OpenToCategory(category:GetID())
+	end
 end

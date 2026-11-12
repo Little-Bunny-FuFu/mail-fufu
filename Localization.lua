@@ -13,7 +13,6 @@ ns.L = L
 -- ---------------------------------------------------------------------------
 L.ADDON_TITLE          = "Mail-fufu"
 L.CHAT_PREFIX          = "Mail-fufu:"
-L.NOT_IMPLEMENTED      = "Not implemented yet."
 L.HOOK_TARGET_MISSING  = "%s hook target not found; that feature is disabled on this client."
 -- Feature names substituted into HOOK_TARGET_MISSING.
 L.HOOK_INBOX_UPDATE    = "Inbox update"
@@ -50,7 +49,7 @@ L.OPT_HEADER_HISTORY   = "Sent-mail history"
 L.OPT_autoAddSelf          = "Add logged-in characters to recently-mailed list"
 L.OPT_autoAddSelf_TIP      = "When a character logs in, add its name to the recently-mailed list for its realm and faction, as long as the list is not full."
 L.OPT_maxRecent            = "Maximum list length"
-L.OPT_maxRecent_TIP        = "How many recently-mailed names to remember per realm and faction (8 to 40). Lowering it drops the oldest names."
+L.OPT_maxRecent_TIP        = "How many recently-mailed names to remember per realm and faction (8 to 40). A lower value drops the oldest names the next time you send mail or log in."
 L.OPT_includeFriends       = "Add friends to addressee list"
 L.OPT_includeFriends_TIP   = "Include your character friends, and any Battle.net friends who are online in this game, in the addressee dropdown and autocomplete."
 L.OPT_includeGuild         = "Add guild members to addressee list"
@@ -78,7 +77,7 @@ L.OPT_printTotal_TIP       = "Print the total money collected at the end of Get 
 L.OPT_tooltipText          = "Display mail text in inbox tooltip"
 L.OPT_tooltipText_TIP      = "Show the mail's text in the tooltip when you hover over a mail in the inbox.\n\n|cffff2020Warning:|r a mail is marked as read as soon as its tooltip appears, and the text can take a few seconds to load."
 L.OPT_historyLength        = "Number of history entries to store"
-L.OPT_historyLength_TIP    = "How many sent mail entries to keep in the history. Set it to 0 to turn the history off."
+L.OPT_historyLength_TIP    = "How many sent mail entries to keep in the history. Set it to 0 to turn the history off. A lower value drops the oldest entries the next time you send mail or log in."
 L.OPT_historyMovable       = "Make history window movable"
 L.OPT_historyMovable_TIP   = "Allow the sent-mail history window to be dragged."
 

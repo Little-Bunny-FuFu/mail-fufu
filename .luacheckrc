@@ -5,6 +5,7 @@ std = "lua51"
 max_line_length = false
 exclude_files = {
 	".luacheckrc",
+	"tests",
 }
 
 ignore = {
@@ -85,6 +86,10 @@ read_globals = {
 	"C_Mail",
 	"C_Container",
 	"C_Timer",
+	"GameMenuFrame",
+	"HideUIPanel",
+	"InCombatLockdown",
+	"SettingsPanel",
 	"GetTime",
 	"GetInboxNumItems",
 	"GetInboxHeaderInfo",

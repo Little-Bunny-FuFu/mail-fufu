@@ -8,7 +8,7 @@
 --   ns.Dispatch(event, ...)     call Mod[event](...) on every module that defines it
 --   ns.RegisterEvent(event)     ref-counted, pcall-safe extra event -> ns.Dispatch
 --   ns.UnregisterEvent(event)
---   ns.GetOption(key) / ns.SetOption(key, value) / ns.ResetOptions()
+--   ns.GetOption(key) / ns.SetOption(key, value)
 --   ns.Print(msg) / ns.PrintError(msg, noSound)
 --   ns.RegisterSlash(sub, fn, quiet)
 --   ns.db / ns.history          SavedVariables tables (valid from ADDON_LOADED on)
@@ -19,9 +19,6 @@ local Compat = ns.Compat
 
 MailFufu = MailFufu or {}
 MailFufu.ns = ns
-
-local Core = {}
-ns.Core = Core
 
 ns.DB_VERSION = 1
 ns.HISTORY_VERSION = 1
@@ -76,15 +73,11 @@ function ns.PrintError(msg, noSound)
 	end
 end
 
-Core.Print = ns.Print
-Core.PrintError = ns.PrintError
-
 -- ---------------------------------------------------------------------------
 -- Module registry. Assigning ns.modules[name] = Mod records registration order, so
 -- OnLogin and dispatch run in TOC order without the modules knowing about each other.
 -- ---------------------------------------------------------------------------
 local moduleOrder = {}
-ns.moduleOrder = moduleOrder
 
 local function SafeCall(fn, ...)
 	local ok, err = pcall(fn, ...)
@@ -207,25 +200,6 @@ function ns.SetOption(key, value)
 	ns.Dispatch("OPTION_CHANGED", key, value)
 end
 
--- Reset every option to its default. Leaves db.realms (addressee lists), db.ui and the
--- history untouched (§1.1 S2, §3.8).
-function ns.ResetOptions()
-	if not ns.db then return end
-	local old = {}
-	for key, value in pairs(ns.db.options) do old[key] = value end
-	wipe(ns.db.options)
-	MergeDefaults(ns.db.options)
-	for _, def in ipairs(ns.OPTION_DEFS) do
-		if old[def.key] ~= ns.db.options[def.key] then
-			ns.Dispatch("OPTION_CHANGED", def.key, ns.db.options[def.key])
-		end
-	end
-end
-
-Core.GetOption = ns.GetOption
-Core.SetOption = ns.SetOption
-Core.ResetOptions = ns.ResetOptions
-
 -- ---------------------------------------------------------------------------
 -- Popups shared by several modules. Modules may add their own MAILFUFU_* dialogs.
 -- ---------------------------------------------------------------------------
@@ -263,7 +237,6 @@ end
 -- Events
 -- ---------------------------------------------------------------------------
 local eventFrame = CreateFrame("Frame")
-ns.eventFrame = eventFrame
 
 local eventRefs = {}
 
@@ -353,7 +326,7 @@ local function BoolText(v)
 	return v and "true" or "false"
 end
 
-function Core.Debug()
+local function Debug()
 	local version, build, buildDate, toc = GetBuildInfo()
 	ns.Print(L.DEBUG_HEADER)
 	ns.Print(format(L.DEBUG_BUILD, tostring(version), tostring(build), tostring(buildDate), tostring(toc)))
@@ -368,7 +341,7 @@ function Core.Debug()
 	ns.Print(format(L.DEBUG_FOREVER, BoolText(Compat.IsForever())))
 end
 
-ns.RegisterSlash("debug", Core.Debug)
+ns.RegisterSlash("debug", Debug)
 
 SLASH_MAILFUFU1 = "/mailfufu"
 SlashCmdList["MAILFUFU"] = function(msg)

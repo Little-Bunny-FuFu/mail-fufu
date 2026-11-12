@@ -58,15 +58,6 @@ function Compat.HookOpenMailUpdate(fn)
 	return false
 end
 
--- Inbox page buttons: named globals on retail 12.1.x, parentKeys only on Forever.
-function Compat.InboxPrevPageButton()
-	return (InboxFrame and InboxFrame.PrevPageButton) or _G.InboxPrevPageButton
-end
-
-function Compat.InboxNextPageButton()
-	return (InboxFrame and InboxFrame.NextPageButton) or _G.InboxNextPageButton
-end
-
 -- Storage key for per-realm data. What GetRealmName() returns on Forever is unverified
 -- (print it with /mailfufu debug), hence the fallbacks.
 function Compat.RealmKey()
